@@ -41,7 +41,8 @@ inputfile_  = "file:"+path_+"step3_{}_e{}GeV_r{}_{}.root".format(pid_str, en_str
 
 #outputfile_ = "file:/data/hgcal-0/user/gouskos/samples/forCTDots2020_111X/trees/photons_closeby_hgcalcenter/hgc_perftree_{}_e{}GeV_{}.root".format(pid_str, en_str, nameprefix)
 #outputfile_ = "file:/data2/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/trees_stepSize2/hgc_perftree_{}_e{}GeV_r{}_{}.root".format(pid_str, en_str, r_str, nameprefix)
-outPath = "/eos/user/l/lecriste/HGCal/www"
+#outPath = "/eos/user/l/lecriste/HGCal/www"
+outPath = "/afs/cern.ch/work/l/lecriste/www/HGCAL/"
 outPath = os.path.join(outPath,pid_str)
 if not os.path.exists(outPath):
     os.mkdir(outPath)

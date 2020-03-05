@@ -17,8 +17,9 @@ histVars = {"DEta": "#Delta#eta", "DPhi": "#Delta#phi"}
 
 for E in [10, 100]:
   #outPath = "/eos/user/l/lecriste/HGCal/www"
-  inputPath = "/eos/user/l/lecriste/HGCal/www"
+  #inputPath = "/eos/user/l/lecriste/HGCal/www"
   origin = "/afs/cern.ch/work/l/lecriste/www/HGCAL/"
+  inputPath = origin
 
   inputPath = os.path.join(inputPath,pid_str)
   outPath = os.path.join(origin,pid_str)
@@ -87,7 +88,6 @@ for E in [10, 100]:
 
           rms[name][varName][format(r, '03')] = hist.GetRMS()
           rmsE[name][varName][format(r, '03')] = hist.GetRMSError()
-          hist.SetMaximum(hist.GetEntries()/2)
           hist.Draw("h")
           canvas.Print(outPath+branchName+"_r"+format(r, '03')+".png")
 
@@ -117,12 +117,15 @@ for E in [10, 100]:
         yE.append(rmsE[name][varName][point])
       gr[name] = ROOT.TGraphErrors(n, x, y, xE, yE)
       gr[name].SetTitle( name );
-      gr[name].GetXaxis().SetTitle( "#DeltaR" )
+      gr[name].GetXaxis().SetTitle( "R" )
       gr[name].GetYaxis().SetTitle( histVars[varName] )
       #gr[name].SetMarkerColor( histTitles[name]['color'] )
       gr[name].SetLineColor( histTitles[name]['color'] )
+      gr[name].GetHistogram().SetMaximum(3*(10**-1))
+      gr[name].GetHistogram().SetMinimum(10**-4)
       same = 'A' if len(gr) < 2 else "SAME "
       gr[name].Draw( same+'CP' )
-      canvas.Update()
+      ROOT.gPad.SetLogy();
+      ROOT.gPad.SetGrid();
     ROOT.gPad.BuildLegend();
     canvas.Print(outPath+varName+"_RMS.png")
