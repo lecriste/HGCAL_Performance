@@ -52,44 +52,63 @@ for E in [10, 100]:
         print("No {} found in file\n{}".format(treeName, inputFile_))
         continue
 
-      # TH1
-      histCos = ROOT.TH1F("cos_BaryAxis","cos(barycenter, axis)", 100,0.9,1)
-      for entryNum in range(0, tree.GetEntries()):
-        tree.GetEntry(entryNum)
-        varCos = getattr(tree, "ts_pcaBaryEigVect0_cos")
-        histCos.Fill(varCos)
-      canvas = ROOT.TCanvas("canvas_cos_r"+format(r, '03'))
-      canvas.cd()
-      ROOT.gStyle.SetOptStat("ourme");
-      ROOT.gPad.SetLogy();
-      histCos.Draw("h")
-      canvas.Print(outPath+"cosBaryAxis_r"+format(r, '03')+".png")
-
-      ROOT.gStyle.SetOptStat("rme");
-      for name, title in histTitles.items():
+      # Define graphs
+      for name in histTitles:
         if name not in rms:
           rms[name] = {}
           rmsE[name] = {}
 
-        for varName, varLabel in histVars.items():
+      # Define histos
+      histCos = ROOT.TH1F("cos_BaryAxis","cos(barycenter, axis)", 100,0.9,1)
+
+      hist = {}
+      branchName = {}
+      for varName, varLabel in histVars.items():
+        hist[varName] = {}
+        branchName[varName] = {}
+        for name, title in histTitles.items():
+          hist[varName][name] = ROOT.TH1F("{}_{}".format(name,varName),"{};{}".format(title['name'],varLabel) , 100,-title['lim'],title['lim'])
+          branchName[varName][name] = "{}_{}".format(title['branch'], "eta" if "eta" in varLabel else "phi")
+
           if varName not in rms[name]:
             rms[name][varName] = {}
             rmsE[name][varName] = {}
 
-          hist = ROOT.TH1F("{}_{}".format(name,varName),"{};{}".format(title['name'],varLabel) , 100,-title['lim'],title['lim'])
-          branchName = "{}_{}".format(title['branch'], "eta" if "eta" in varLabel else "phi")
-          canvas = ROOT.TCanvas("canvas_"+branchName+format(r, '03'))
+      # Loop over tree entries
+      for entryNum in range(0, tree.GetEntries()):
+        tree.GetEntry(entryNum)
+
+        varCos = getattr(tree, "ts_pcaBaryEigVect0_cos")
+        histCos.Fill(varCos)
+
+        for varName in histVars:
+          for name in histTitles:
+            var = getattr(tree, branchName[varName][name])
+            hist[varName][name].Fill(var)
+
+
+
+
+      # Plot histos and fill graphs
+      canvasCos = ROOT.TCanvas("canvas_cos_r"+format(r, '03'))
+      canvasCos.cd()
+      ROOT.gStyle.SetOptStat("ourme");
+      ROOT.gPad.SetLogy();
+      histCos.Draw("h")
+      canvasCos.Print(outPath+"cosBaryAxis_r"+format(r, '03')+".png")
+
+      ROOT.gStyle.SetOptStat("rme");
+      for varName, varLabel in histVars.items():
+        for name, title in histTitles.items():
+          rms[name][varName][format(r, '03')] = hist[varName][name].GetRMS()
+          rmsE[name][varName][format(r, '03')] = hist[varName][name].GetRMSError()
+
+          canvas = ROOT.TCanvas("canvas_"+branchName[varName][name]+format(r, '03'))
           canvas.cd()
+          hist[varName][name].Draw("h")
+          canvas.Print(outPath+branchName[varName][name]+"_r"+format(r, '03')+".png")
 
-          for entryNum in range(0, tree.GetEntries()):
-            tree.GetEntry(entryNum)
-            var = getattr(tree, branchName)
-            hist.Fill(var)
 
-          rms[name][varName][format(r, '03')] = hist.GetRMS()
-          rmsE[name][varName][format(r, '03')] = hist.GetRMSError()
-          hist.Draw("h")
-          canvas.Print(outPath+branchName+"_r"+format(r, '03')+".png")
 
 #      # TH2
 #      for varName, varLabel in histVars.items():
