@@ -58,14 +58,16 @@ for E in [10, 100]:
           rms[name] = {}
           rmsE[name] = {}
 
-      # Define histos
+      # Define histos and graphs
       histCos = ROOT.TH1F("cos_BaryAxis","cos(barycenter, axis)", 100,0.9,1)
 
       hist = {}
       branchName = {}
+      scatter = {}
       for varName, varLabel in histVars.items():
         hist[varName] = {}
         branchName[varName] = {}
+        scatter[varName] = ROOT.TH2F("{}".format(varName),"{};{};{}".format(varLabel,histTitles["Bary-CP"]["name"],histTitles["Axis-CP"]["name"]) , 100,-histTitles["Bary-CP"]['lim'],histTitles["Bary-CP"]['lim'], 100,-histTitles["Axis-CP"]['lim'],histTitles["Axis-CP"]['lim'])
         for name, title in histTitles.items():
           hist[varName][name] = ROOT.TH1F("{}_{}".format(name,varName),"{};{}".format(title['name'],varLabel) , 100,-title['lim'],title['lim'])
           branchName[varName][name] = "{}_{}".format(title['branch'], "eta" if "eta" in varLabel else "phi")
@@ -78,15 +80,20 @@ for E in [10, 100]:
       for entryNum in range(0, tree.GetEntries()):
         tree.GetEntry(entryNum)
 
+        # Fill histos
         varCos = getattr(tree, "ts_pcaBaryEigVect0_cos")
         histCos.Fill(varCos)
 
+        x, y = 999, 999
         for varName in histVars:
           for name in histTitles:
             var = getattr(tree, branchName[varName][name])
             hist[varName][name].Fill(var)
-
-
+            if 'barycenter' in histTitles[name]['name']:
+              x = var
+            else:
+              y = var
+          scatter[varName].Fill(x,y)
 
 
       # Plot histos and fill graphs
@@ -99,6 +106,12 @@ for E in [10, 100]:
 
       ROOT.gStyle.SetOptStat("rme");
       for varName, varLabel in histVars.items():
+        canvas2D = ROOT.TCanvas("canvas_"+varName+format(r, '03'))
+        canvas2D.cd()
+        scatter[varName].Draw('colz')
+        ROOT.gPad.SetGrid()
+        canvas2D.Print(outPath+"Scatter"+varName+"_r"+format(r, '03')+".png")
+
         for name, title in histTitles.items():
           rms[name][varName][format(r, '03')] = hist[varName][name].GetRMS()
           rmsE[name][varName][format(r, '03')] = hist[varName][name].GetRMSError()
@@ -108,17 +121,6 @@ for E in [10, 100]:
           hist[varName][name].Draw("h")
           canvas.Print(outPath+branchName[varName][name]+"_r"+format(r, '03')+".png")
 
-
-
-#      # TH2
-#      for varName, varLabel in histVars.items():
-#        hist = ROOT.TH1F("Axis-Barycenter","{varLabel};{varLabel};", 100,-title['lim'],title['lim'],100,-title['lim'],title['lim'])
-#        for name, title in histTitles.items():
-#          for entryNum in range(0, tree.GetEntries()):
-#            tree.GetEntry(entryNum)
-#            var[name] = getattr(tree, branchName)
-#
-#          hist.Fill(var[],var[])
 
       inFile.Close()
 
