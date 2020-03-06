@@ -12,6 +12,7 @@ import  ROOT
 treeName = "performance/tree"
 deltaBary_lim = 0.1 
 deltaAxis_lim = 0.5
+scatter_lim = max(deltaBary_lim,deltaAxis_lim)
 histTitles = {"Bary-CP": {"name": "Trackster barycenter - CaloParticle", "lim": deltaBary_lim, "branch": "EBary_cp0", "color": ROOT.kRed}, "Axis-CP": {"name": "Trackster axis - CaloParticle", "lim": deltaAxis_lim, "branch": "EAxis_cp0", "color": ROOT.kBlack}}
 histVars = {"DEta": "#Delta#eta", "DPhi": "#Delta#phi"}
 
@@ -31,6 +32,11 @@ for E in [10, 100]:
   if not os.path.exists(outPath):
     os.mkdir(outPath)
     os.system('cp '+origin+'index.php '+outPath)
+
+  outPathSingle = os.path.join(outPath,"singleCanvas/")
+  if not os.path.exists(outPathSingle):
+    os.mkdir(outPathSingle)
+    os.system('cp '+origin+'index.php '+outPathSingle)
 
   rms = {}
   rmsE = {}
@@ -67,7 +73,7 @@ for E in [10, 100]:
       for varName, varLabel in histVars.items():
         hist[varName] = {}
         branchName[varName] = {}
-        scatter[varName] = ROOT.TH2F("{}".format(varName),"{};{};{}".format(varLabel,histTitles["Bary-CP"]["name"],histTitles["Axis-CP"]["name"]) , 100,-histTitles["Bary-CP"]['lim'],histTitles["Bary-CP"]['lim'], 100,-histTitles["Axis-CP"]['lim'],histTitles["Axis-CP"]['lim'])
+        scatter[varName] = ROOT.TH2F("{}".format(varName),"{};{};{}".format(varLabel,histTitles["Bary-CP"]["name"],histTitles["Axis-CP"]["name"]) , 100,-scatter_lim,scatter_lim, 100,-scatter_lim,scatter_lim)
         for name, title in histTitles.items():
           hist[varName][name] = ROOT.TH1F("{}_{}".format(name,varName),"{};{}".format(title['name'],varLabel) , 100,-title['lim'],title['lim'])
           branchName[varName][name] = "{}_{}".format(title['branch'], "eta" if "eta" in varLabel else "phi")
@@ -102,7 +108,7 @@ for E in [10, 100]:
       ROOT.gStyle.SetOptStat("ourme");
       ROOT.gPad.SetLogy();
       histCos.Draw("h")
-      canvasCos.Print(outPath+"cosBaryAxis_r"+format(r, '03')+".png")
+      canvasCos.Print(outPathSingle+"cosBaryAxis_r"+format(r, '03')+".png")
 
       ROOT.gStyle.SetOptStat("rme");
       for varName, varLabel in histVars.items():
@@ -110,8 +116,10 @@ for E in [10, 100]:
         canvas2D.cd()
         scatter[varName].Draw('colz')
         ROOT.gPad.SetGrid()
-        canvas2D.Print(outPath+"Scatter"+varName+"_r"+format(r, '03')+".png")
+        canvas2D.Print(outPathSingle+"Scatter"+varName+"_r"+format(r, '03')+".png")
 
+        canvasMulti = ROOT.TCanvas("canvasMulti_"+varName+format(r, '03'))
+        canvasMulti.Divide(2,2)
         for name, title in histTitles.items():
           rms[name][varName][format(r, '03')] = hist[varName][name].GetRMS()
           rmsE[name][varName][format(r, '03')] = hist[varName][name].GetRMSError()
@@ -119,7 +127,18 @@ for E in [10, 100]:
           canvas = ROOT.TCanvas("canvas_"+branchName[varName][name]+format(r, '03'))
           canvas.cd()
           hist[varName][name].Draw("h")
-          canvas.Print(outPath+branchName[varName][name]+"_r"+format(r, '03')+".png")
+          canvas.Print(outPathSingle+branchName[varName][name]+"_r"+format(r, '03')+".png")
+
+          if 'barycenter' in histTitles[name]['name']:
+            canvasMulti.cd(1)
+          else:
+            canvasMulti.cd(3)
+          hist[varName][name].Draw("h")
+        canvasMulti.cd(2)
+        scatter[varName].Draw('colz')
+        canvasMulti.cd(4)
+        histCos.Draw("h")
+        canvasMulti.Print(outPath+varName+"_r"+format(r, '03')+".png")
 
 
       inFile.Close()
@@ -139,7 +158,7 @@ for E in [10, 100]:
       gr[name] = ROOT.TGraphErrors(n, x, y, xE, yE)
       gr[name].SetTitle( name );
       gr[name].GetXaxis().SetTitle( "R" )
-      gr[name].GetYaxis().SetTitle( histVars[varName] )
+      gr[name].GetYaxis().SetTitle( "RMS("+histVars[varName]+")" )
       #gr[name].SetMarkerColor( histTitles[name]['color'] )
       gr[name].SetLineColor( histTitles[name]['color'] )
       gr[name].GetHistogram().SetMaximum(3*(10**-1))
