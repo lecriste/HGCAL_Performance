@@ -15,6 +15,7 @@ deltaAxis_lim = 0.5
 scatter_lim = max(deltaBary_lim,deltaAxis_lim)
 histTitles = {"Bary-CP": {"name": "Trackster barycenter - CaloParticle", "lim": deltaBary_lim, "branch": "EBary_cp0", "color": ROOT.kRed}, "Axis-CP": {"name": "Trackster axis - CaloParticle", "lim": deltaAxis_lim, "branch": "EAxis_cp0", "color": ROOT.kBlack}}
 histVars = {"DEta": "#Delta#eta", "DPhi": "#Delta#phi"}
+pcaSig = 'pcasig'
 
 for E in [10, 100]:
   #outPath = "/eos/user/l/lecriste/HGCal/www"
@@ -82,6 +83,10 @@ for E in [10, 100]:
             rms[name][varName] = {}
             rmsE[name][varName] = {}
 
+      histSigmas = {}
+      for i in [0,2]:
+        histSigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R{}".format(i,format(r, '03')) , 100,0,100)
+
       # Loop over tree entries
       for entryNum in range(0, tree.GetEntries()):
         tree.GetEntry(entryNum)
@@ -101,6 +106,9 @@ for E in [10, 100]:
               y = var
           scatter[varName].Fill(x,y)
 
+        varSig = getattr(tree, "ts_"+pcaSig)
+        for i in [0,2]:
+          histSigmas[pcaSig+str(i)].Fill(varSig[i])
 
       # Plot histos and fill graphs
       canvasCos = ROOT.TCanvas("canvas_cos_r"+format(r, '03'))
@@ -140,6 +148,11 @@ for E in [10, 100]:
         histCos.Draw("h")
         canvasMulti.Print(outPath+varName+"_r"+format(r, '03')+".png")
 
+      for i in [0,2]:
+        canvasSig = ROOT.TCanvas("canvas_sig"+str(i)+"_r"+format(r, '03'))
+        canvasSig.cd()
+        histSigmas[pcaSig+str(i)].Draw("h")
+        canvasSig.Print(outPathSingle+pcaSig+str(i)+"_r"+format(r, '03')+".png")
 
       inFile.Close()
 
