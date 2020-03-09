@@ -156,29 +156,29 @@ for E in [10, 100]:
 
       inFile.Close()
 
-  from array import array
-  for varName in histVars:
-    canvas = ROOT.TCanvas("canvas_"+varName)
-    gr = {}
-    for name in histTitles:
-      n = len(rms[name][varName])
-      x, y, xE, yE = array('d'), array('d'), array('d'), array('d')
-      for point in sorted(rms[name][varName]):
-        x.append(int(point));
-        xE.append(0);
-        y.append(rms[name][varName][point])
-        yE.append(rmsE[name][varName][point])
-      gr[name] = ROOT.TGraphErrors(n, x, y, xE, yE)
-      gr[name].SetTitle( name );
-      gr[name].GetXaxis().SetTitle( "R" )
-      gr[name].GetYaxis().SetTitle( "RMS("+histVars[varName]+")" )
-      #gr[name].SetMarkerColor( histTitles[name]['color'] )
-      gr[name].SetLineColor( histTitles[name]['color'] )
-      gr[name].GetHistogram().SetMaximum(3*(10**-1))
-      gr[name].GetHistogram().SetMinimum(10**-4)
-      same = 'A' if len(gr) < 2 else "SAME "
-      gr[name].Draw( same+'CP' )
-      ROOT.gPad.SetLogy();
-      ROOT.gPad.SetGrid();
-    ROOT.gPad.BuildLegend();
-    canvas.Print(outPath+varName+"_RMS.png")
+      from array import array
+      for varName in histVars:
+        canvas = ROOT.TCanvas("canvas_"+varName)
+        gr = {}
+        for name in histTitles:
+          n = len(rms[name][varName])
+          x, y, xE, yE = array('d'), array('d'), array('d'), array('d')
+          for point in sorted(rms[name][varName]):
+            x.append(int(point));
+            xE.append(0);
+            y.append(rms[name][varName][point])
+            yE.append(rmsE[name][varName][point])
+          gr[name] = ROOT.TGraphErrors(n, x, y, xE, yE)
+          gr[name].SetTitle( name );
+          gr[name].GetXaxis().SetTitle( "R" )
+          gr[name].GetYaxis().SetTitle( "RMS("+histVars[varName]+")" )
+          #gr[name].SetMarkerColor( histTitles[name]['color'] )
+          gr[name].SetLineColor( histTitles[name]['color'] )
+          gr[name].GetHistogram().SetMaximum(3*(10**-1))
+          gr[name].GetHistogram().SetMinimum(10**-4)
+          same = 'A' if len(gr) < 2 else "SAME "
+          gr[name].Draw( same+'CP' )
+          ROOT.gPad.SetLogy();
+          ROOT.gPad.SetGrid();
+        ROOT.gPad.BuildLegend();
+        canvas.Print(outPath+varName+"_RMS.png")
