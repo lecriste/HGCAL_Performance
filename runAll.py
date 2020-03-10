@@ -84,8 +84,9 @@ for E in [10, 100]:
             rmsE[name][varName] = {}
 
       histSigmas = {}
-      for i in [0,2]:
-        histSigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R{}".format(i,format(r, '03')) , 100,0,100)
+      for i in [0,1,2]:
+        histSigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R{}".format(i,format(r, '03')) , 40,0,20)
+      histTwoSigmas = ROOT.TH2F("PCA_sigma1vs2_{}".format(format(r, '03')),"PCA #sigma_1 vs #sigma_2 for R{};#sigma_1;#sigma_2".format(format(r, '03')) , 40,0,20, 40,0,20)
 
       # Loop over tree entries
       for entryNum in range(0, tree.GetEntries()):
@@ -107,8 +108,9 @@ for E in [10, 100]:
           scatter[varName].Fill(x,y)
 
         varSig = getattr(tree, "ts_"+pcaSig)
-        for i in [0,2]:
+        for i in [0,1,2]:
           histSigmas[pcaSig+str(i)].Fill(varSig[i])
+        histTwoSigmas.Fill(varSig[1], varSig[2])
 
       # Plot histos and fill graphs
       canvasCos = ROOT.TCanvas("canvas_cos_r"+format(r, '03'))
@@ -148,11 +150,16 @@ for E in [10, 100]:
         histCos.Draw("h")
         canvasMulti.Print(outPath+varName+"_r"+format(r, '03')+".png")
 
-      for i in [0,2]:
+      for i in [0,1,2]:
         canvasSig = ROOT.TCanvas("canvas_sig"+str(i)+"_r"+format(r, '03'))
         canvasSig.cd()
         histSigmas[pcaSig+str(i)].Draw("h")
         canvasSig.Print(outPathSingle+pcaSig+str(i)+"_r"+format(r, '03')+".png")
+
+      canvasTwoSig = ROOT.TCanvas("canvas_sig1vs2_r"+format(r, '03'))
+      canvasTwoSig.cd()
+      histTwoSigmas.Draw("colz")
+      canvasTwoSig.Print(outPath+pcaSig+"1vs2_r"+format(r, '03')+".png")
 
       inFile.Close()
 

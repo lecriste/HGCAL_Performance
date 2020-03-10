@@ -32,8 +32,9 @@ import os
 
 #path_ = "/data/hgcal-0/user/gouskos/samples/forCTDots2020/step3_cmssw_11_1_X_2020-02-18-1100/photons_closeby_hgcalcenter/"
 #path_ = "/data/hgcal-0/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/step3/"
-path_ = "/data2/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/step3/"
+#path_ = "/data2/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/step3/"
 #path_ = "/data2/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/step3_stepSize2/"
+path_ = "/data2/user/lecriste/HGCal/samples/111X_PF_Mar9/photons_closeby_fixedenergy_scaneta/step3/"
 
 #inputfile_  = "file:"+path_+"step3_{}_e{}GeV_{}.root".format(pid_str, en_str, nameprefix)
 inputfile_  = "file:"+path_+"step3_{}_e{}GeV_r{}_{}.root".format(pid_str, en_str, r_str, nameprefix)
