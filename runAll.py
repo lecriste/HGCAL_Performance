@@ -15,6 +15,8 @@ deltaAxis_lim = 0.5
 scatter_lim = max(deltaBary_lim,deltaAxis_lim)
 histTitles = {"Bary-CP": {"name": "Trackster barycenter - CaloParticle", "lim": deltaBary_lim, "branch": "EBary_cp0", "color": ROOT.kRed}, "Axis-CP": {"name": "Trackster axis - CaloParticle", "lim": deltaAxis_lim, "branch": "EAxis_cp0", "color": ROOT.kBlack}}
 histVars = {"DEta": "#Delta#eta", "DPhi": "#Delta#phi"}
+eigVal = 'eigVal'
+eigVal_max = {"0": 50, "1": 1, "2": 1}
 pcaSig = 'pcasig'
 
 for E in [10, 100]:
@@ -83,9 +85,11 @@ for E in [10, 100]:
             rms[name][varName] = {}
             rmsE[name][varName] = {}
 
+      histEigValues = {}
       histSigmas = {}
       for i in [0,1,2]:
-        histSigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R{}".format(i,format(r, '03')) , 40,0,20)
+        histEigValues[eigVal+str(i)] = ROOT.TH1F("PCA_eigVal{}_{}".format(i,format(r, '03')),"PCA eigenVal_{} for R{};eigenvalue_{}".format(i,format(r, '03'),i) , 50,0,eigVal_max[str(i)])
+        histSigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R{};PCA #sigma_{}".format(i,format(r, '03'),i) , 40,0,20)
       histTwoSigmas = ROOT.TH2F("PCA_sigma1vs2_{}".format(format(r, '03')),"PCA #sigma_1 vs #sigma_2 for R{};#sigma_1;#sigma_2".format(format(r, '03')) , 40,0,20, 40,0,20)
 
       # Loop over tree entries
@@ -107,8 +111,10 @@ for E in [10, 100]:
               y = var
           scatter[varName].Fill(x,y)
 
+        varEigVal = getattr(tree, "ts_pcaeigval")
         varSig = getattr(tree, "ts_"+pcaSig)
         for i in [0,1,2]:
+          histEigValues[eigVal+str(i)].Fill(varEigVal[i])
           histSigmas[pcaSig+str(i)].Fill(varSig[i])
         histTwoSigmas.Fill(varSig[1], varSig[2])
 
@@ -151,6 +157,11 @@ for E in [10, 100]:
         canvasMulti.Print(outPath+varName+"_r"+format(r, '03')+".png")
 
       for i in [0,1,2]:
+        canvasEigVal = ROOT.TCanvas("canvas_eigVal"+str(i)+"_r"+format(r, '03'))
+        canvasEigVal.cd()
+        histEigValues[eigVal+str(i)].Draw("h")
+        canvasEigVal.Print(outPathSingle+eigVal+str(i)+"_r"+format(r, '03')+".png")
+
         canvasSig = ROOT.TCanvas("canvas_sig"+str(i)+"_r"+format(r, '03'))
         canvasSig.cd()
         histSigmas[pcaSig+str(i)].Draw("h")
