@@ -96,10 +96,11 @@ for E in [10, 100]:
       histEigValues = {}
       histPCASigmas = {}
       for i in [0,1,2]:
-        histSigmas[sig+str(i)] = ROOT.TH1F("Sigma{}_{}".format(i,format(r, '03')),"#sigma_{} for R{};#sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
-        histEigValues[eigVal+str(i)] = ROOT.TH1F("PCA_eigVal{}_{}".format(i,format(r, '03')),"PCA eigenVal_{} for R{};eigenvalue_{}".format(i,format(r, '03'),i) , 50,0,eigVal_max[str(i)])
-        histPCASigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R{};PCA #sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
-      histTwoSigmas = ROOT.TH2F("PCA_sigma1vs{}_{}".format(pcaSigY, format(r, '03')),"PCA #sigma_1 vs #sigma_{} for R{};#sigma_1;#sigma_{}".format(pcaSigY, format(r, '03'), pcaSigY) , 40,0,10, 40,0,10)
+        histSigmas[sig+str(i)] = ROOT.TH1F("Sigma{}_{}".format(i,format(r, '03')),"#sigma_{} for R={};#sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
+        histEigValues[eigVal+str(i)] = ROOT.TH1F("PCA_eigVal{}_{}".format(i,format(r, '03')),"PCA eigenVal_{} for R={};eigenvalue_{}".format(i,format(r, '03'),i) , 50,0,eigVal_max[str(i)])
+        histPCASigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R={};PCA #sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
+      histTwoSigmas = ROOT.TH2F("Orig_sigmaYvsX_{}".format(format(r, '03')),"#sigma_y vs #sigma_x for R={};#sigma_x;#sigma_y".format(format(r, '03')), 40,0,10, 40,0,10)
+      histTwoPCASigmas = ROOT.TH2F("PCA_sigma1vs{}_{}".format(pcaSigY, format(r, '03')),"PCA #sigma_1 vs #sigma_{} for R={};PCA #sigma_1;PCA #sigma_{}".format(pcaSigY, format(r, '03'), pcaSigY) , 40,0,10, 40,0,10)
 
       # Loop over tree entries
       for entryNum in range(0, tree.GetEntries()):
@@ -127,7 +128,8 @@ for E in [10, 100]:
           histSigmas[sig+str(i)].Fill(varSig[i])
           histEigValues[eigVal+str(i)].Fill(varEigVal[i])
           histPCASigmas[pcaSig+str(i)].Fill(varPCASig[i])
-        histTwoSigmas.Fill(varPCASig[1], varPCASig[int(pcaSigY)])
+        histTwoSigmas.Fill(varSig[0], varSig[1])
+        histTwoPCASigmas.Fill(varPCASig[1], varPCASig[int(pcaSigY)])
 
       # Plot histos and fill graphs
       canvasCos = ROOT.TCanvas("canvas_cos_r"+format(r, '03'))
@@ -183,10 +185,15 @@ for E in [10, 100]:
         histPCASigmas[pcaSig+str(i)].Draw("h")
         canvasPCASig.Print(outPathSingle+pcaSig+str(i)+"_r"+format(r, '03')+".png")
 
-      canvasTwoSig = ROOT.TCanvas("canvas_sig1vs+"+pcaSigY+"+_r"+format(r, '03'))
+      canvasTwoSig = ROOT.TCanvas("canvas_sigYvsX_r"+format(r, '03'))
       canvasTwoSig.cd()
       histTwoSigmas.Draw("colz")
-      canvasTwoSig.Print(outPath+pcaSig+"1vs"+pcaSigY+"_r"+format(r, '03')+".png")
+      canvasTwoSig.Print(outPath+"SigYvsSigX_r"+format(r, '03')+".png")
+
+      canvasTwoPCASig = ROOT.TCanvas("canvas_PCASig1vs+"+pcaSigY+"+_r"+format(r, '03'))
+      canvasTwoPCASig.cd()
+      histTwoPCASigmas.Draw("colz")
+      canvasTwoPCASig.Print(outPath+"pcaSig1vs"+pcaSigY+"_r"+format(r, '03')+".png")
 
       inFile.Close()
 
