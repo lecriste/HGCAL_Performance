@@ -96,11 +96,11 @@ for E in [10, 100]:
       histEigValues = {}
       histPCASigmas = {}
       for i in [0,1,2]:
-        histSigmas[sig+str(i)] = ROOT.TH1F("Sigma{}_{}".format(i,format(r, '03')),"#sigma_{} for R={};#sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
-        histEigValues[eigVal+str(i)] = ROOT.TH1F("PCA_eigVal{}_{}".format(i,format(r, '03')),"PCA eigenVal_{} for R={};eigenvalue_{}".format(i,format(r, '03'),i) , 50,0,eigVal_max[str(i)])
-        histPCASigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for R={};PCA #sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
-      histTwoSigmas = ROOT.TH2F("Orig_sigmaYvsX_{}".format(format(r, '03')),"#sigma_y vs #sigma_x for R={};#sigma_x;#sigma_y".format(format(r, '03')), 40,0,10, 40,0,10)
-      histTwoPCASigmas = ROOT.TH2F("PCA_sigma1vs{}_{}".format(pcaSigY, format(r, '03')),"PCA #sigma_1 vs #sigma_{} for R={};PCA #sigma_1;PCA #sigma_{}".format(pcaSigY, format(r, '03'), pcaSigY) , 40,0,10, 40,0,10)
+        histSigmas[sig+str(i)] = ROOT.TH1F("Sigma{}_{}".format(i,format(r, '03')),"#sigma_{} for r={};#sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
+        histEigValues[eigVal+str(i)] = ROOT.TH1F("PCA_eigVal{}_{}".format(i,format(r, '03')),"PCA eigenVal_{} for r={};eigenvalue_{}".format(i,format(r, '03'),i) , 50,0,eigVal_max[str(i)])
+        histPCASigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for r={};PCA #sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
+      histTwoSigmas = ROOT.TH2F("Orig_sigmaYvsX_{}".format(format(r, '03')),"#sigma_y vs #sigma_x for r={};#sigma_x;#sigma_y".format(format(r, '03')), 40,0,10, 40,0,10)
+      histTwoPCASigmas = ROOT.TH2F("PCA_sigma1vs{}_{}".format(pcaSigY, format(r, '03')),"PCA #sigma_1 vs #sigma_{} for r={};PCA #sigma_1;PCA #sigma_{}".format(pcaSigY, format(r, '03'), pcaSigY) , 40,0,10, 40,0,10)
 
       # Loop over tree entries
       for entryNum in range(0, tree.GetEntries()):
@@ -211,7 +211,7 @@ for E in [10, 100]:
             yE.append(rmsE[name][varName][point])
           gr[name] = ROOT.TGraphErrors(n, x, y, xE, yE)
           gr[name].SetTitle( name );
-          gr[name].GetXaxis().SetTitle( "R" )
+          gr[name].GetXaxis().SetTitle( "r" )
           gr[name].GetYaxis().SetTitle( "RMS("+histVars[varName]+")" )
           #gr[name].SetMarkerColor( histTitles[name]['color'] )
           gr[name].SetLineColor( histTitles[name]['color'] )
