@@ -12,8 +12,13 @@ import  ROOT
 treeName = "performance/tree"
 sig = 'sig'
 deltaBary_lim = 0.1 
+binWidthBary = 0.005
 deltaAxis_lim = 0.5
+binWidthAxis = 0.01
+
 scatter_lim = max(deltaBary_lim,deltaAxis_lim)
+binNBary = int(scatter_lim*2/binWidthBary)
+binNAxis = int(scatter_lim*2/binWidthAxis)
 histTitles = {"Bary-CP": {"name": "Trackster barycenter - CaloParticle", "lim": deltaBary_lim, "branch": "EBary_cp0", "color": ROOT.kRed}, "Axis-CP": {"name": "Trackster axis - CaloParticle", "lim": deltaAxis_lim, "branch": "EAxis_cp0", "color": ROOT.kBlack}}
 histVars = {"DEta": "#Delta#eta", "DPhi": "#Delta#phi"}
 eigVal = 'eigVal'
@@ -78,7 +83,7 @@ for E in [10, 100]:
       for varName, varLabel in histVars.items():
         hist[varName] = {}
         branchName[varName] = {}
-        scatter[varName] = ROOT.TH2F("{}".format(varName),"{};{};{}".format(varLabel,histTitles["Bary-CP"]["name"],histTitles["Axis-CP"]["name"]) , 100,-scatter_lim,scatter_lim, 100,-scatter_lim,scatter_lim)
+        scatter[varName] = ROOT.TH2F("{}".format(varName),"{};{};{}".format(varLabel,histTitles["Bary-CP"]["name"],histTitles["Axis-CP"]["name"]) , binNBary,-scatter_lim,scatter_lim, binNAxis,-scatter_lim,scatter_lim)
         for name, title in histTitles.items():
           hist[varName][name] = ROOT.TH1F("{}_{}".format(name,varName),"{};{}".format(title['name'],varLabel) , 100,-title['lim'],title['lim'])
           branchName[varName][name] = "{}_{}".format(title['branch'], "eta" if "eta" in varLabel else "phi")
