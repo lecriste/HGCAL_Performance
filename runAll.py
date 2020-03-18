@@ -75,7 +75,7 @@ for E in [10, 100]:
           rmsE[name] = {}
 
       # Define histos and graphs
-      histCos = ROOT.TH1F("cos_BaryAxis","cos(barycenter, axis)", 100,0.9,1)
+      histCos = ROOT.TH1F("cos_BaryAxis","cos(PCA barycenter, main PCA axis);cos(barycenter, axis)", 100,0.9,1)
 
       hist = {}
       branchName = {}
