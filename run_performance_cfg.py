@@ -36,6 +36,10 @@ import os
 #path_ = "/data2/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/step3_stepSize2/"
 path_ = "/data2/user/lecriste/HGCal/samples/111X_PF_Mar9/photons_closeby_fixedenergy_scaneta/step3/"
 
+#pointing = "Pointing"
+pointing = "nonPointing"
+path_ = path_+pointing+"/"
+
 #inputfile_  = "file:"+path_+"step3_{}_e{}GeV_{}.root".format(pid_str, en_str, nameprefix)
 inputfile_  = "file:"+path_+"step3_{}_e{}GeV_r{}_{}.root".format(pid_str, en_str, r_str, nameprefix)
 #inputfile_  = "file:step3.root"
@@ -47,6 +51,10 @@ outPath = "/afs/cern.ch/work/l/lecriste/www/HGCAL/"
 outPath = os.path.join(outPath,pid_str)
 if not os.path.exists(outPath):
     os.mkdir(outPath)
+outPath = os.path.join(outPath,pointing)
+if not os.path.exists(outPath):
+    os.mkdir(outPath)
+
 outputfile_ = "file:"+outPath+"/hgc_perftree_e{}GeV_r{}_{}.root".format(en_str, r_str, nameprefix)
 
 print inputfile_ 

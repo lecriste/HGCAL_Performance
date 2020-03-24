@@ -9,6 +9,9 @@ print("Running with option makeTrees = {}, makePlots = {}, particleId = {}, cond
 import os, subprocess
 import  ROOT
 
+#pointing = "Pointing"
+pointing = "nonPointing"
+
 treeName = "performance/tree"
 sig = 'sig'
 deltaBary_lim = 0.1 
@@ -32,11 +35,15 @@ for E in [10, 100]:
   origin = "/afs/cern.ch/work/l/lecriste/www/HGCAL/"
   inputPath = origin
 
-  inputPath = os.path.join(inputPath,pid_str)
+  inputPath = os.path.join(inputPath,pid_str,pointing)
   outPath = os.path.join(origin,pid_str)
   if not os.path.exists(outPath):
     os.mkdir(outPath)
     os.system('cp '+origin+'index.php '+outPath)
+
+  outPath = os.path.join(outPath,pointing)
+  if not os.path.exists(outPath):
+    os.mkdir(outPath)
 
   outPath = os.path.join(outPath, str(E)+"GeV/")
   if not os.path.exists(outPath):
