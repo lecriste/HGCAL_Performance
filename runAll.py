@@ -1,16 +1,28 @@
 import sys
 makeTrees = sys.argv[1].lower() == 'true'
 makePlots = sys.argv[2].lower() == 'true'
-pid_str = sys.argv[3]
-nameprefix = sys.argv[4]
-step = int(sys.argv[5])
+layerClVsRecHits = sys.argv[3].lower() == 'true'
+if layerClVsRecHits and not makePlots:
+  print("Can't run layerClVsRecHits with makePlots = false, please check the arguments list")
+  sys.exit()
 
-print("Running with option makeTrees = {}, makePlots = {}, particleId = {}, condition = {}, step = {}".format(makeTrees, makePlots, pid_str, nameprefix, step))
+pid_str = sys.argv[4]
+nameprefix = sys.argv[5]
+step = int(sys.argv[6])
+
+print("Running with option makeTrees = {}, makePlots = {}, makeComparison = {} particleId = {}, condition = {}, step = {}".format(makeTrees, makePlots, layerClVsRecHits, pid_str, nameprefix, step))
 import os, subprocess
 import  ROOT
 
 #pointing = "Pointing"
 pointing = "nonPointing"
+#granularity = "layerCl"
+granularity = "recHits"
+granuOpt = ["layerCl","recHits"]
+granuX = "layerCl"
+granuY = granuOpt
+granuY.remove(granuX)
+granuY = granuY[0]
 
 treeName = "performance/tree"
 sig = 'sig'
@@ -27,28 +39,44 @@ histVars = {"DEta": "#Delta#eta", "DPhi": "#Delta#phi"}
 eigVal = 'eigVal'
 eigVal_max = {"0": 50, "1": 1, "2": 1}
 pcaSig = 'pcasig'
-pcaSigY = '0'
+pcaSigY = '2'
 
 for E in [10, 100]:
+  layerClVsRecHits = sys.argv[3]
   #outPath = "/eos/user/l/lecriste/HGCal/www"
   #inputPath = "/eos/user/l/lecriste/HGCal/www"
   origin = "/afs/cern.ch/work/l/lecriste/www/HGCAL/"
   inputPath = origin
 
-  inputPath = os.path.join(inputPath,pid_str,pointing)
+  inputPath = os.path.join(inputPath,pid_str,pointing,granularity)
   outPath = os.path.join(origin,pid_str)
   if not os.path.exists(outPath):
     os.mkdir(outPath)
     os.system('cp '+origin+'index.php '+outPath)
 
-  outPath = os.path.join(outPath,pointing)
+  outPath = os.path.join(outPath, pointing)
   if not os.path.exists(outPath):
     os.mkdir(outPath)
+    os.system('cp '+origin+'index.php '+outPath)
+
+  outPathComp = os.path.join(outPath, "comparison/")
+  if not os.path.exists(outPathComp):
+    os.mkdir(outPathComp)
+    os.system('cp '+origin+'index.php '+outPathComp)
+
+  outPath = os.path.join(outPath, granularity)
+  if not os.path.exists(outPath):
+    os.mkdir(outPath)
+    os.system('cp '+origin+'index.php '+outPath)
 
   outPath = os.path.join(outPath, str(E)+"GeV/")
   if not os.path.exists(outPath):
     os.mkdir(outPath)
     os.system('cp '+origin+'index.php '+outPath)
+  outPathComp = os.path.join(outPathComp, str(E)+"GeV/")
+  if not os.path.exists(outPathComp):
+    os.mkdir(outPathComp)
+    os.system('cp '+origin+'index.php '+outPathComp)
 
   outPathSingle = os.path.join(outPath,"singleCanvas/")
   if not os.path.exists(outPathSingle):
@@ -65,15 +93,40 @@ for E in [10, 100]:
 
     if makePlots:
       inputFile_ = "file:"+inputPath+"/hgc_perftree_e{}GeV_r{}_{}.root".format(E, r, nameprefix)
+      inputFileVs_ = ""
+      if layerClVsRecHits:
+        if granuX in inputPath:
+          inputFileVs_ = inputFile_.replace(granuX,granuY)
+        elif granuY in inputPath:
+          inputFileVs_ = inputFile_.replace(granuY,granuX)
+
       print("\nOpening file {}".format(inputFile_))
       if not inputFile_:
         print("No such file")
         continue
+      if layerClVsRecHits and inputFileVs_:
+        print("\nand file {}".format(inputFileVs_))
+        if not inputFileVs_:
+          print("No such file")
+
       inFile = ROOT.TFile.Open(inputFile_,"READ")
-      tree = inFile.Get(treeName)
+      inFileVs = ROOT.TFile.Open(inputFileVs_,"READ")
+      if inFile: tree = inFile.Get(treeName)
+      if inFileVs:
+        treeVs = inFileVs.Get(treeName)
+      else:
+        layerClVsRecHits = False
       if not tree:
         print("No {} found in file\n{}".format(treeName, inputFile_))
         continue
+      if layerClVsRecHits and inFileVs:
+        if not treeVs:
+          print("No {} found in file\n{}".format(treeName, inputFileVs_))
+          layerClVsRecHits = False
+        elif tree.GetEntries() != treeVs.GetEntries():
+          print("Not same entries number of {} tree in {} ({}) and {} ({}) files\n".format(treeName, inputFile_, tree.GetEntries(),
+                                                                                           inputFileVs_, treeVs.GetEntries()))
+          layerClVsRecHits = False
 
       # Define graphs
       for name in histTitles:
@@ -83,6 +136,8 @@ for E in [10, 100]:
 
       # Define histos and graphs
       histCos = ROOT.TH1F("cos_BaryAxis","cos(PCA barycenter, main PCA axis);cos(barycenter, axis)", 100,0.9,1)
+      if layerClVsRecHits:
+        histCos_vs = ROOT.TH2F("cos_BaryAxis_vs","cos(PCA barycenter, main PCA axis);{} cos(barycenter, axis);{} cos(barycenter, axis)".format(granuX,granuY), 100,0.9,1, 100,0.9,1)
 
       hist = {}
       branchName = {}
@@ -102,20 +157,31 @@ for E in [10, 100]:
       histSigmas = {}
       histEigValues = {}
       histPCASigmas = {}
+      if layerClVsRecHits:
+        histEigValues_vs = {}
+        histPCASigmas_vs = {}
       for i in [0,1,2]:
         histSigmas[sig+str(i)] = ROOT.TH1F("Sigma{}_{}".format(i,format(r, '03')),"#sigma_{} for r={};#sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
         histEigValues[eigVal+str(i)] = ROOT.TH1F("PCA_eigVal{}_{}".format(i,format(r, '03')),"PCA eigenVal_{} for r={};eigenvalue_{}".format(i,format(r, '03'),i) , 50,0,eigVal_max[str(i)])
         histPCASigmas[pcaSig+str(i)] = ROOT.TH1F("PCA_sigma{}_{}".format(i,format(r, '03')),"PCA #sigma_{} for r={};PCA #sigma_{}".format(i,format(r, '03'),i) , 40,0,10)
+        if layerClVsRecHits:
+          histEigValues_vs[eigVal+str(i)] = ROOT.TH2F("PCA_eigVal{}_{}_vs".format(i,format(r, '03')),"PCA eigenVal_{} for r={};{} eigenvalue_{};{} eigenvalue_{}".format(i,format(r, '03'),granuX,i,granuY,i) , 50,0,eigVal_max[str(i)], 50,0,eigVal_max[str(i)])
+          histPCASigmas_vs[pcaSig+str(i)] = ROOT.TH2F("PCA_sigma{}_{}_vs".format(i,format(r, '03')),"PCA #sigma_{} for r={};{} PCA #sigma_{};{} PCA #sigma_{}".format(i,format(r, '03'),granuX,i,granuY,i) , 40,0,10, 40,0,10)
       histTwoSigmas = ROOT.TH2F("Orig_sigmaYvsX_{}".format(format(r, '03')),"#sigma_y vs #sigma_x for r={};#sigma_x;#sigma_y".format(format(r, '03')), 40,0,10, 40,0,10)
       histTwoPCASigmas = ROOT.TH2F("PCA_sigma1vs{}_{}".format(pcaSigY, format(r, '03')),"PCA #sigma_1 vs #sigma_{} for r={};PCA #sigma_1;PCA #sigma_{}".format(pcaSigY, format(r, '03'), pcaSigY) , 40,0,10, 40,0,10)
 
       # Loop over tree entries
       for entryNum in range(0, tree.GetEntries()):
         tree.GetEntry(entryNum)
+        if layerClVsRecHits:
+          treeVs.GetEntry(entryNum)
 
         # Fill histos
         varCos = getattr(tree, "ts_pcaBaryEigVect0_cos")
         histCos.Fill(varCos)
+        if layerClVsRecHits:
+          varCos_vs = getattr(treeVs, "ts_pcaBaryEigVect0_cos")
+          histCos_vs.Fill(varCos, varCos_vs)
 
         x, y = 999, 999
         for varName in histVars:
@@ -131,10 +197,16 @@ for E in [10, 100]:
         varSig = getattr(tree, "ts_"+sig)
         varEigVal = getattr(tree, "ts_pcaeigval")
         varPCASig = getattr(tree, "ts_"+pcaSig)
+        if layerClVsRecHits:
+          varEigVal_vs = getattr(treeVs, "ts_pcaeigval")
+          varPCASig_vs = getattr(treeVs, "ts_"+pcaSig)
         for i in [0,1,2]:
           histSigmas[sig+str(i)].Fill(varSig[i])
           histEigValues[eigVal+str(i)].Fill(varEigVal[i])
           histPCASigmas[pcaSig+str(i)].Fill(varPCASig[i])
+          if layerClVsRecHits:
+            histEigValues_vs[eigVal+str(i)].Fill(varEigVal[i],varEigVal_vs[i])
+            histPCASigmas_vs[pcaSig+str(i)].Fill(varPCASig[i],varPCASig_vs[i])
         histTwoSigmas.Fill(varSig[0], varSig[1])
         histTwoPCASigmas.Fill(varPCASig[1], varPCASig[int(pcaSigY)])
 
@@ -145,6 +217,18 @@ for E in [10, 100]:
       ROOT.gPad.SetLogy();
       histCos.Draw("h")
       canvasCos.Print(outPathSingle+"cosBaryAxis_r"+format(r, '03')+".png")
+      if layerClVsRecHits:
+        ROOT.gPad.SetLogx();
+        ROOT.gPad.SetLogy();
+        histCos_vs.GetXaxis().SetMoreLogLabels()
+        histCos_vs.GetYaxis().SetMoreLogLabels()
+        histCos_vs.Draw("colz")
+        ROOT.gPad.Update()
+        ROOT.gPad.SetGrid()
+        st = histCos_vs.FindObject("stats")
+        st.SetX1NDC(0.2)
+        st.SetX2NDC(0.4)
+        canvasCos.Print(outPathComp+"cosBaryAxis_r"+format(r, '03')+".png")
 
       ROOT.gStyle.SetOptStat("rme");
       for varName, varLabel in histVars.items():
@@ -186,11 +270,19 @@ for E in [10, 100]:
         canvasEigVal.cd()
         histEigValues[eigVal+str(i)].Draw("h")
         canvasEigVal.Print(outPathSingle+eigVal+str(i)+"_r"+format(r, '03')+".png")
+        if layerClVsRecHits:
+          histEigValues_vs[eigVal+str(i)].Draw("colz")
+          ROOT.gPad.SetGrid();
+          canvasEigVal.Print(outPathComp+eigVal+str(i)+"_r"+format(r, '03')+".png")
 
         canvasPCASig = ROOT.TCanvas("canvas_PCASig"+str(i)+"_r"+format(r, '03'))
         canvasPCASig.cd()
         histPCASigmas[pcaSig+str(i)].Draw("h")
         canvasPCASig.Print(outPathSingle+pcaSig+str(i)+"_r"+format(r, '03')+".png")
+        if layerClVsRecHits:
+          histPCASigmas_vs[pcaSig+str(i)].Draw("colz")
+          ROOT.gPad.SetGrid();
+          canvasPCASig.Print(outPathComp+pcaSig+str(i)+"_r"+format(r, '03')+".png")
 
       canvasTwoSig = ROOT.TCanvas("canvas_sigYvsX_r"+format(r, '03'))
       canvasTwoSig.cd()
