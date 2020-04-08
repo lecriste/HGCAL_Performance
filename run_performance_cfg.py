@@ -24,9 +24,11 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
 import sys
 pid_str = sys.argv[2]
-en_str = sys.argv[3]
-nameprefix = sys.argv[4] 
-r_str = sys.argv[5]
+pointing = sys.argv[3]
+en_str = sys.argv[4]
+nameprefix = sys.argv[5]
+r_str = sys.argv[6]
+granularity = sys.argv[7]
 
 import os
 
@@ -36,15 +38,17 @@ import os
 #path_ = "/data2/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/step3_stepSize2/"
 path_ = "/data2/user/lecriste/HGCal/samples/111X_PF_Mar9/photons_closeby_fixedenergy_scaneta/step3/"
 
-pointing = "Pointing"
-#pointing = "nonPointing"
-#granularity = "layerCl"
-granularity = "recHits"
 path_ = path_+pointing+"/"+granularity+"/"
 
-#inputfile_  = "file:"+path_+"step3_{}_e{}GeV_{}.root".format(pid_str, en_str, nameprefix)
-inputfile_  = "file:"+path_+"step3_{}_e{}GeV_r{}_{}.root".format(pid_str, en_str, r_str, nameprefix)
-#inputfile_  = "file:step3.root"
+#inputfile_  = path_+"step3_{}_e{}GeV_{}.root".format(pid_str, en_str, nameprefix)
+inputfile_  = path_+"step3_{}_e{}GeV_r{}_{}.root".format(pid_str, en_str, r_str, nameprefix)
+#inputfile_  = "step3.root"
+
+if not os.path.isfile(inputfile_):
+  #print("Input file not found, skipping:\n{}".format(inputfile_))
+  raise NameError("Input file not found, skipping:\n{}".format(inputfile_))
+
+localInputFile_ = "file:"+inputfile_
 
 #outputfile_ = "file:/data/hgcal-0/user/gouskos/samples/forCTDots2020_111X/trees/photons_closeby_hgcalcenter/hgc_perftree_{}_e{}GeV_{}.root".format(pid_str, en_str, nameprefix)
 #outputfile_ = "file:/data2/user/gouskos/samples/forCTDots2020_111X/photons_closeby_fixedenergy_scaneta/trees_stepSize2/hgc_perftree_{}_e{}GeV_r{}_{}.root".format(pid_str, en_str, r_str, nameprefix)
@@ -62,26 +66,26 @@ if not os.path.exists(outPath):
 
 outputfile_ = "file:"+outPath+"/hgc_perftree_e{}GeV_r{}_{}.root".format(en_str, r_str, nameprefix)
 
-print inputfile_ 
+print localInputFile_
 print outputfile_
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 50
+
+process.source = cms.Source(
+    "PoolSource",
+    fileNames = cms.untracked.vstring([
+        localInputFile_
+        #'file:single_pi_pgun/step3_singlepi_e100GeV.root'
+    ]
+                                  )
+)
+
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.TFileService = cms.Service("TFileService",
                                    fileName = cms.string(outputfile_),
                                    closeFileFast = cms.untracked.bool(True)
                                )
-
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-
-process.source = cms.Source(
-    "PoolSource",
-    fileNames = cms.untracked.vstring([
-        inputfile_
-        #'file:single_pi_pgun/step3_singlepi_e100GeV.root'
-    ]
-                                  )
-)
 
 #process.load("hgc_analyzer_for_ml.HGCPerformanceAnalyzer.performance_cfi")
 process.load("performance_cfi")
